@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Two-Year Diary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --vintage-paper: #f4ecd8;
+            --ink-color: #2c3e50;
+            --accent-pink: #d4a5a5;
+            --sticky-note: #fff9c4;
+            --tape-color: rgba(212, 165, 165, 0.4);
+            --letter-ink: #1a2a6c;
+            --ribbon-red: #8b0000;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            overflow: hidden;
+            font-family: 'Playfair Display', serif;
+            background-color: #2d241e;
+            color: var(--ink-color);
+        }
+
+        .diary-container {
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; perspective: 2500px;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%),
+                url('https://www.transparenttextures.com/patterns/dark-wood.png');
+        }
+
+        /* --- PAGE STYLING --- */
+        .page {
+            width: 95%; max-width: 800px;
+            height: 85vh; max-height: 600px;
+            background-color: var(--vintage-paper);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 0 100px rgba(0,0,0,0.05);
+            position: absolute; display: none;
+            padding: 40px; border-radius: 4px;
+            transform-origin: left center;
+            border-left: 15px solid #3d2b1f;
+            z-index: 1; backface-visibility: hidden;
+        }
+
+        .page.active {
+            display: flex; flex-direction: column;
+            animation: pageFlip 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            z-index: 100;
+        }
+
+        #page-3.active { overflow: visible; }
+
+        @keyframes pageFlip {
+            0% { transform: rotateY(-90deg); opacity: 0; }
+            100% { transform: rotateY(0deg); opacity: 1; }
+        }
+
+        .handwritten { font-family: 'Dancing Script', cursive; }
+        .doodle-font { font-family: 'Shadows Into Light', cursive; }
+
+        /* Scrapbook Items */
+        .interactive-item { cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; }
+        .interactive-item:hover { transform: scale(1.08) rotate(0deg) !important; z-index: 500; }
+
+        .polaroid {
+            background: white; padding: 10px 10px 30px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); user-select: none;
+        }
+        
+        .polaroid-frame {
+            width: 100%; height: 100%;
+            background: #eee; display: flex;
+            align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+
+        .polaroid img { width: 100%; height: 100%; object-fit: cover; }
+
+        .img-placeholder { position: absolute; font-size: 2rem; color: var(--accent-pink); opacity: 0.5; }
+
+        .journal-board {
+            background: rgba(0,0,0,0.03); border-radius: 12px;
+            padding: 20px; border: 1px dashed rgba(0,0,0,0.1);
+            position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .sticky-note {
+            background: var(--sticky-note); padding: 15px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1); position: relative;
+        }
+
+        .tape {
+            position: absolute; width: 60px; height: 20px;
+            background: var(--tape-color); top: -10px; left: 50%;
+            transform: translateX(-50%) rotate(-2deg); z-index: 2;
+        }
+
+        /* --- REDESIGNED CONFESSION SECTION: RIBBON PULL PARCHMENT --- */
+        .confession-wrapper {
+            position: relative; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            overflow: visible;
+        }
+
+        .parchment-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 130px;
+            background-color: #fffef0;
+            border: 1px solid #dcdcdc;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .parchment-container.open {
+            height: 500px; /* Increased to ensure no cutoff */
+            max-width: 580px;
+            padding: 20px;
+            cursor: default;
+        }
+
+        /* Ribbon Styles */
+        .ribbon-wrap {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .ribbon-band {
+            width: 100%; height: 25px;
+            background: var(--ribbon-red);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: relative; cursor: pointer;
+        }
+
+        .ribbon-pull-tab {
+            position: absolute; right: 20%; top: 10px;
+            width: 40px; height: 80px;
+            background: var(--ribbon-red);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            animation: dangle 3s ease-in-out infinite;
+            transform-origin: top center;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 10px; color: white;
+            font-size: 10px; text-transform: uppercase; font-weight: bold;
+        }
+
+        @keyframes dangle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .parchment-container.open .ribbon-wrap {
+            opacity: 0; pointer-events: none;
+        }
+
+        /* Adjusted Secret Content for Visibility */
+        .secret-content {
+            opacity: 0;
+            transition: opacity 0.6s ease 0.5s;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            font-family: 'Dancing Script', cursive;
+            color: var(--letter-ink);
+            /* Lined paper effect adjusted for smaller line-height to fit more text */
+            background-image: linear-gradient(#e1d9c1 1px, transparent 1px);
+            background-size: 100% 2.1rem;
+            line-height: 2.1rem;
+            padding: 15px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .parchment-container.open .secret-content {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .btn-vintage {
+            background: #4a3728; color: white;
+            padding: 10px 24px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 2px;
+            font-size: 0.8rem; transition: all 0.2s;
+            cursor: pointer; border: none; box-shadow: 0 5px 0 #2d241e;
+            position: relative; z-index: 500;
+        }
+        .btn-vintage:hover { background: #5a4535; transform: translateY(-1px); }
+        .btn-vintage:active { transform: translateY(3px); box-shadow: 0 2px 0 #2d241e; }
+
+        #mascot-container {
+            position: fixed; bottom: 20px; right: 20px;
+            z-index: 5000; cursor: pointer; text-align: right;
+        }
+
+        #mascot-bubble {
+            background: white; padding: 12px 18px; border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); width: 220px;
+            font-size: 0.85rem; display: none; border: 1px solid #eee;
+            margin-bottom: 10px; position: relative;
+        }
+
+        .progress-dots {
+            position: absolute; bottom: 30px; left: 50%;
+            transform: translateX(-50%); display: flex; gap: 12px; z-index: 1000;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
+        .dot.active { background: var(--accent-pink); transform: scale(1.3); }
+
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none;
+            justify-content: center; align-items: center;
+            z-index: 20000; backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--vintage-paper); padding: 50px;
+            border-radius: 12px; max-width: 90%; width: 500px;
+            text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+    </style>
+</head>
+<body>
+
+<div class="diary-container">
+    
+    <!-- PAGE 0: COVER -->
+    <div id="page-0" class="page active items-center justify-center text-center">
+        <h1 class="text-6xl md:text-8xl mb-6 font-bold tracking-tighter">Two Years</h1>
+        <div class="w-48 h-1 bg-amber-900/20 mb-8"></div>
+        <p class="italic text-2xl mb-10 text-stone-600">A collection of moments, thoughts, and "us".</p>
+        <p class="handwritten text-4xl mb-16 text-pink-700">Happy Anniversary, My Love.</p>
+        <button onclick="nextPage()" class="btn-vintage">Open Diary</button>
+        <div class="absolute bottom-10 opacity-30 italic text-sm">Property of Our Heartfelt Memories</div>
+    </div>
+
+    <!-- PAGE 1: MEMORIES -->
+    <div id="page-1" class="page">
+        <h2 class="handwritten text-4xl mb-4 text-center">Chapter I: The Snapshots</h2>
+        <p class="mb-8 doodle-font text-xl text-gray-500 text-center">Click our photos to remember...</p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-8 justify-items-center flex-grow">
+            <!-- Photo 1 -->
+            <div class="polaroid interactive-item" style="transform: rotate(-5deg);" onclick="showMemory('That day when we finally hugged, you got your bday gift on my bday. That moment felt unreal, i still get butterfiles thinking about it.')">
+                <div class="w-32 h-32 md:w-40 md:h-40 polaroid-frame">
+                    <span class="img-placeholder">❤️</span>
+                    <img src="first.jpeg" alt="" onerror="this.style.display='none'">
+                </div>
+                <p class="handwritten text-center mt-3 text-lg">The First Hug</p>
+            </div>
+
+            <!-- Photo 2 -->
+            <div class="polaroid interactive-item" style="transform: rotate(4deg);" onclick="showMemory('That time when we spent 72 hrs together. Those days when you took care of me like a child -sleeping while holding hands, wearing your jacket , me relaxing my feets on you and feeling like a Queen, & my most favourite memory you kneelin down to clean my pant..it just melts my heart.')">
+                <div class="w-32 h-32 md:w-40 md:h-40 polaroid-frame">
+                    <span class="img-placeholder">☕</span>
+                    <img src="second.jpeg" alt="" onerror="this.style.display='none'">
+                </div>
+                <p class="handwritten text-center mt-3 text-lg">Sleepless Nights</p>
+            </div>
+
+            <!-- Photo 3 -->
+            <div class="polaroid interactive-item" style="transform: rotate(-2deg);" onclick="showMemory('Our big trip! Our first trip together! Those late night movies togther will always be my most lovely memory.')">
+                <div class="w-32 h-32 md:w-40 md:h-40 polaroid-frame">
+                    <span class="img-placeholder">✨</span>
+                    <img src="third.jpeg" alt="" onerror="this.style.display='none'">
+                </div>
+                <p class="handwritten text-center mt-3 text-lg">Adventure Time</p>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-6 flex justify-between">
+            <button onclick="prevPage()" class="btn-vintage opacity-70">Back</button>
+            <button onclick="nextPage()" class="btn-vintage">Next Chapter</button>
+        </div>
+    </div>
+
+    <!-- PAGE 2: FEELINGS -->
+    <div id="page-2" class="page">
+        <h2 class="handwritten text-4xl mb-2 text-center">Chapter II: Little Thoughts</h2>
+        <p class="mb-4 italic text-gray-500 text-center">A collection of things I love about us.</p>
+        
+        <div class="journal-board flex-grow flex flex-col">
+            <div class="grid grid-cols-2 gap-6 flex-grow" id="dynamic-thoughts-container">
+                <div class="flex flex-col gap-6 justify-center">
+                    <div class="sticky-note interactive-item transform -rotate-3" onclick="showMemory('I love how you know exactly how to make me smile, even when I forget myself.')">
+                        <div class="tape"></div>
+                        <p class="doodle-font text-center mt-2 text-xl">Small Details</p>
+                    </div>
+                    <div class="sticky-note interactive-item transform rotate-2" style="background-color: #fce4ec;" onclick="showMemory('your voice just clams me down when I feel nervous.Your laugh is the only soundtrack I need for the rest of my life.')">
+                        <div class="tape" style="background: rgba(0,0,0,0.05)"></div>
+                        <p class="doodle-font text-center mt-2 text-xl">Your Laugh</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center justify-center border-l border-black/5 pl-6">
+                    <div class="p-6 bg-white/40 rounded-full shadow-inner mb-4 relative">
+                        <svg width="80" height="80" viewBox="0 0 24 24" class="heart-svg interactive-item mx-auto" onclick="showMemory('I feel safest when I\'m holding your hand. It\'s my favorite place in the world.')">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </div>
+                    <p class="handwritten text-3xl text-stone-700">Forever "Us"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-6 flex justify-between">
+            <button onclick="prevPage()" class="btn-vintage opacity-70">Back</button>
+            <button onclick="nextPage()" class="btn-vintage">Final Page</button>
+        </div>
+    </div>
+
+    <!-- PAGE 3: CONFESSION -->
+    <div id="page-3" class="page">
+        <h2 class="handwritten text-4xl mb-4 text-center">The Final Secret</h2>
+        
+        <div class="confession-wrapper">
+            <!-- Ribbon Pull Layout -->
+            <div id="parchment-reveal" class="parchment-container">
+                <div class="ribbon-wrap" onclick="revealSecret()">
+                    <div class="ribbon-band"></div>
+                    <div class="ribbon-pull-tab">Pull</div>
+                </div>
+                
+                <div class="secret-content">
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 0.4rem;">13 January, 2026</p>
+                    <p style="font-size: 1.5rem; margin-bottom: 0.4rem;">My Dearest,</p>
+                    <p>These last 730 days have been the most beautiful journey of my life.</p>
+                    <p>I didn't just find a partner; I found my bestest friend, my mentor, my doremon.</p>
+                    <p>From boring lectures to late night chats, every second with you is a treasure I keep locked in my heart.</p>
+                    <p>Thank you for being my person. Here is to a thousand more chapters together.</p>
+                    <p style="font-size: 1.8rem; margin-top: 0.8rem;">Forever yours...</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center" style="height: 24px;">
+                <p id="lock-message" class="italic text-gray-400 text-sm transition-all duration-500">The ribbon is tied until memories are explored.</p>
+            </div>
+        </div>
+
+        <div class="absolute bottom-8 right-10">
+            <button onclick="prevPage()" class="btn-vintage opacity-70">Back</button>
+        </div>
+    </div>
+
+    <div class="progress-dots">
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <div id="mascot-container" onclick="toggleMascotChat()">
+        <div id="mascot-bubble">
+            <span id="mascot-text">"Hi! I'm Barnaby. I'm guarding your memories!"</span>
+        </div>
+        <div class="text-6xl hover:scale-110 transition-transform drop-shadow-lg">🧸</div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <p id="modal-text" class="handwritten text-3xl text-gray-800 leading-tight"></p>
+        <button onclick="closeModal()" class="btn-vintage mt-12 scale-90">Close note</button>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const totalPages = 4;
+    let interactions = 0;
+    const requiredInteractions = 3; 
+    let isEnvelopeUnlocked = false;
+
+    const bearMessages = [
+        "Hi! I'm Barnaby. I'm guarding your memories!",
+        "Ooh, that photo looks lovely!",
+        "Did you read that note? It's so sweet.",
+        "I'm so happy to be part of your story!",
+        "Love is in the air. I can smell it!",
+        "You two make a perfect team."
+    ];
+
+    function toggleMascotChat() {
+        const bubble = document.getElementById('mascot-bubble');
+        const textElem = document.getElementById('mascot-text');
+        const isVisible = bubble.style.display === 'block';
+        
+        if (!isVisible) {
+            const randomMsg = bearMessages[Math.floor(Math.random() * bearMessages.length)];
+            textElem.innerText = `"${randomMsg}"`;
+            bubble.style.display = 'block';
+        } else {
+            bubble.style.display = 'none';
+        }
+    }
+
+    function updatePage() {
+        document.querySelectorAll('.page').forEach((p, idx) => p.classList.toggle('active', idx === currentPage));
+        document.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === currentPage));
+        checkProgress();
+    }
+
+    function nextPage() { if (currentPage < totalPages - 1) { currentPage++; updatePage(); } }
+    function prevPage() { if (currentPage > 0) { currentPage--; updatePage(); } }
+
+    function showMemory(text) {
+        document.getElementById('modal-text').innerText = text;
+        document.getElementById('modal-overlay').style.display = 'flex';
+        interactions++; checkProgress();
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+    function checkProgress() {
+        const lockMsg = document.getElementById('lock-message');
+        const container = document.getElementById('parchment-reveal');
+        if (interactions >= requiredInteractions) {
+            isEnvelopeUnlocked = true;
+            if (lockMsg && !container.classList.contains('open')) { 
+                lockMsg.innerText = "Pull the ribbon to reveal my heart!"; 
+                lockMsg.classList.add('text-pink-700', 'font-bold'); 
+            }
+            if (container) container.style.opacity = "1";
+        } else if (container) { 
+            container.style.opacity = "0.4"; 
+        }
+    }
+
+    function revealSecret() {
+        if (!isEnvelopeUnlocked) {
+            const textElem = document.getElementById('mascot-text');
+            const bubble = document.getElementById('mascot-bubble');
+            textElem.innerText = "Patience! Explore more memories first.";
+            bubble.style.display = 'block';
+            return;
+        }
+        const container = document.getElementById('parchment-reveal');
+        if (!container.classList.contains('open')) {
+            container.classList.add('open');
+            document.getElementById('lock-message').style.display = 'none';
+            createConfetti();
+        }
+    }
+
+    function createConfetti() {
+        const icons = ['💖', '🌸', '✨', '🎈', '❤️'];
+        for(let i=0; i<50; i++) {
+            const c = document.createElement('div');
+            c.innerText = icons[Math.floor(Math.random()*icons.length)];
+            c.style.position = 'fixed'; c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-50px';
+            c.style.fontSize = '24px'; c.style.zIndex = '3000';
+            c.style.transition = `transform 3s linear, top 3s linear`;
+            document.body.appendChild(c);
+            setTimeout(() => { c.style.top = '110vh'; c.style.transform = `rotate(720deg)`; }, 50);
+            setTimeout(() => c.remove(), 5000);
+        }
+    }
+
+    window.onload = updatePage;
+</script>
+</body>
+</html>
